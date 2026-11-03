@@ -10,6 +10,10 @@ identified with a specific icon:
 - 🩹: bug fix
 - 🌱: miscellaneous change
 
+## Unreleased
+
+- ✨ *console*: add IP ranges to filters, like `SrcAddr = 192.0.2.10-192.0.2.20`
+
 ## 2026.10.1 - 2026-10-25
 
 - ✨ *inlet*: add support for IPFIX over TCP and SCTP

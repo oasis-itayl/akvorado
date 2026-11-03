@@ -131,6 +131,9 @@ applicable. Here are a few examples:
   address. Note that filtering on IP addresses is usually slower.
 - `SrcAddr = 203.0.113.0/24` only selects flows that match the
   specified subnet.
+- `SrcAddr = 203.0.113.10-203.0.113.20` only selects flows with an address in
+  the specified range, both ends included. Ranges can also be mixed with
+  addresses and subnets in a list: `SrcAddr IN (192.0.2.1, 203.0.113.10-203.0.113.20)`.
 - `ExporterName LIKE th2-%` selects flows from routers
   that start with `th2-`.
 - `ASPath = AS1299` selects flows where the AS path contains 1299.

@@ -206,9 +206,9 @@ func (c *current) prefixCondition(col schema.Column, prefix netip.Prefix) sb.Exp
 	)
 }
 
-// ipOrSubnetCondition builds the condition for a list mixing addresses and
-// subnets. Addresses are gathered in a single IN, while each subnet needs its
-// own range comparison.
+// ipOrSubnetCondition builds the condition for a list mixing addresses, ranges
+// and subnets. Addresses are gathered in a single IN, while each range or subnet
+// needs its own range comparison.
 func (c *current) ipOrSubnetCondition(col schema.Column, operator string, items []any) (sb.Expr, error) {
 	left := c.column(col)
 	addresses := []sb.Expr{}
@@ -220,8 +220,10 @@ func (c *current) ipOrSubnetCondition(col schema.Column, operator string, items 
 				sb.Function("toIPv6", sb.String(value.String())))
 		case netip.Prefix:
 			conditions = append(conditions, betweenPrefix(left, value, false))
+		case ipRange:
+			conditions = append(conditions, betweenRange(left, value, false))
 		default:
-			return sb.Expr{}, errors.New("expecting an IP address or a subnet")
+			return sb.Expr{}, errors.New("expecting an IP address, a range or a subnet")
 		}
 	}
 	if len(addresses) > 0 {
@@ -293,14 +295,24 @@ func (c *current) largeCommunitiesColumn(col schema.Column) schema.Column {
 	return c.getColumn(strings.Replace(col.Name, "Communities", "LargeCommunities", 1))
 }
 
-// betweenPrefix compares a column to the address range covered by a prefix.
-func betweenPrefix(left sb.Expr, prefix netip.Prefix, not bool) sb.Expr {
-	low := sb.Function("toIPv6", sb.String(prefix.Masked().Addr().String()))
-	high := sb.Function("toIPv6", sb.String(lastIP(prefix).String()))
+// ipRange is an inclusive range of IP addresses, like 192.0.2.10-192.0.2.20.
+type ipRange struct {
+	first, last netip.Addr
+}
+
+// betweenRange compares a column to an inclusive range of addresses.
+func betweenRange(left sb.Expr, r ipRange, not bool) sb.Expr {
+	low := sb.Function("toIPv6", sb.String(r.first.String()))
+	high := sb.Function("toIPv6", sb.String(r.last.String()))
 	if not {
 		return sb.NotBetween(left, low, high)
 	}
 	return sb.Between(left, low, high)
+}
+
+// betweenPrefix compares a column to the address range covered by a prefix.
+func betweenPrefix(left sb.Expr, prefix netip.Prefix, not bool) sb.Expr {
+	return betweenRange(left, ipRange{first: prefix.Masked().Addr(), last: lastIP(prefix)}, not)
 }
 
 func lastIP(subnet netip.Prefix) netip.Addr {

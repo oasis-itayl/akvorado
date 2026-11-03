@@ -45,7 +45,7 @@ ListOfValues {
     '"' (![\\\n"] | "\\" _)* '"'? |
     "'" (![\\\n'] | "\\" _)* "'"?
   }
-  Literal { (std.digit | std.asciiLetter | $[.:/])+ }
+  Literal { (std.digit | std.asciiLetter | $[.:/-])+ }
   ValueLParen { "(" }
   ValueRParen { ")" }
   ValueComma { "," }
@@ -55,5 +55,5 @@ ListOfValues {
   Not { "not" | "NOT" | "Not" | "NOt" | "NoT" | "nOT" | "nOt" | "noT" }
 
   @precedence { Not, Column }
-  @precedence { Literal, BlockComment }
+  @precedence { LineComment, Literal, BlockComment }
 }

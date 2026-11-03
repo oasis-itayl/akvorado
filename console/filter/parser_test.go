@@ -93,6 +93,52 @@ func TestValidFilter(t *testing.T) {
 			MetaOut: Meta{MainTableRequired: true},
 		},
 		{
+			Input:   `SrcAddr = 192.168.0.20-192.168.0.40`,
+			Output:  `SrcAddr BETWEEN toIPv6('192.168.0.20') AND toIPv6('192.168.0.40')`,
+			MetaOut: Meta{MainTableRequired: true},
+		},
+		{
+			Input:   `SrcAddr << 192.168.0.20-192.168.0.40`,
+			Output:  `SrcAddr BETWEEN toIPv6('192.168.0.20') AND toIPv6('192.168.0.40')`,
+			MetaOut: Meta{MainTableRequired: true},
+		},
+		{
+			Input:   `SrcAddr = 192.168.0.20-192.168.0.20`,
+			Output:  `SrcAddr BETWEEN toIPv6('192.168.0.20') AND toIPv6('192.168.0.20')`,
+			MetaOut: Meta{MainTableRequired: true},
+		},
+		{
+			Input:   `DstAddr != 192.168.0.20-192.168.0.40`,
+			Output:  `DstAddr NOT BETWEEN toIPv6('192.168.0.20') AND toIPv6('192.168.0.40')`,
+			MetaOut: Meta{MainTableRequired: true},
+		},
+		{
+			Input:   `DstAddr !<< 192.168.0.20-192.168.0.40`,
+			Output:  `DstAddr NOT BETWEEN toIPv6('192.168.0.20') AND toIPv6('192.168.0.40')`,
+			MetaOut: Meta{MainTableRequired: true},
+		},
+		{
+			Input:   `SrcAddr = 2001:db8::1-2001:db8::10`,
+			Output:  `SrcAddr BETWEEN toIPv6('2001:db8::1') AND toIPv6('2001:db8::10')`,
+			MetaOut: Meta{MainTableRequired: true},
+		},
+		{
+			Input:   `SrcAddr = 192.168.0.20-192.168.0.40`,
+			Output:  `DstAddr BETWEEN toIPv6('192.168.0.20') AND toIPv6('192.168.0.40')`,
+			MetaIn:  Meta{ReverseDirection: true},
+			MetaOut: Meta{ReverseDirection: true, MainTableRequired: true},
+		},
+		{
+			Input:   `SrcAddr IN (203.0.113.1, 192.168.0.20-192.168.0.40)`,
+			Output:  `(SrcAddr IN (toIPv6('203.0.113.1')) OR SrcAddr BETWEEN toIPv6('192.168.0.20') AND toIPv6('192.168.0.40'))`,
+			MetaOut: Meta{MainTableRequired: true},
+		},
+		{
+			Input:   `SrcAddr NOTIN (192.168.0.20-192.168.0.40, 10.0.0.0/8)`,
+			Output:  `NOT (SrcAddr BETWEEN toIPv6('192.168.0.20') AND toIPv6('192.168.0.40') OR SrcAddr BETWEEN toIPv6('10.0.0.0') AND toIPv6('10.255.255.255'))`,
+			MetaOut: Meta{MainTableRequired: true},
+		},
+		{
 			Input:   `DstAddr !<< 192.168.0.128/27`,
 			Output:  `DstAddr NOT BETWEEN toIPv6('192.168.0.128') AND toIPv6('192.168.0.159')`,
 			MetaOut: Meta{MainTableRequired: true},
@@ -679,6 +725,10 @@ func TestInvalidFilter(t *testing.T) {
 		{Input: `SrcMAC = 00:11:22:33:44:55:66`, EnableAll: true},
 		{Input: `SrcAddrDimensionAttribute = 8`},
 		{Input: `InvalidDimensionAttribute = "Test"`},
+		{Input: `SrcAddr = 192.168.0.40-192.168.0.20`},
+		{Input: `SrcAddr = 192.168.0.20-2001:db8::1`},
+		{Input: `SrcAddr = 192.168.0.20-`},
+		{Input: `SrcAddr = 192.168.0.20 - 192.168.0.40`},
 		{Input: `SrcPort < ExporterName`},
 		{Input: `SrcPort < SrcAS`},
 		{Input: `SrcPort < DstPortt`},

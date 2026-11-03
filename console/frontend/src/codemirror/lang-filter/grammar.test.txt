@@ -74,6 +74,16 @@ ExporterAddress=2001:db8:0::1
 ==>
 Filter(Column, Operator, Value(Literal))
 
+# IPv4 range
+SrcAddr=192.0.2.10-192.0.2.20
+==>
+Filter(Column, Operator, Value(Literal))
+
+# Line comment after a range
+SrcAddr=192.0.2.10-192.0.2.20 -- some comment
+==>
+Filter(Column, Operator, Value(Literal), LineComment)
+
 # << Operator
 ExporterAddress << 2001:db8:0::/64
 ==>

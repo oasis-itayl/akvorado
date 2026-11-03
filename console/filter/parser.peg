@@ -72,6 +72,14 @@ ConditionIPExpr "condition on IP" ←
      return betweenPrefix(c.column(column.(schema.Column)), subnet.(netip.Prefix), true), nil
    }
  / column:ColumnIP _
+   ("<<" / "=") _ addrRange:IPRange {
+     return betweenRange(c.column(column.(schema.Column)), addrRange.(ipRange), false), nil
+   }
+ / column:ColumnIP _
+   ("!<<" / "!=") _ addrRange:IPRange {
+     return betweenRange(c.column(column.(schema.Column)), addrRange.(ipRange), true), nil
+   }
+ / column:ColumnIP _
    operator:("=" / "!=") _ ip:IP {
      return sb.Op(c.column(column.(schema.Column)), toString(operator),
        sb.Function("toIPv6", sb.String(ip.(netip.Addr).String()))), nil
@@ -295,12 +303,22 @@ Subnet "IP subnet" ← [0-9A-Fa-f:.]+ "/" [0-9]+ !IdentStart {
   }
   return net, nil
 }
+IPRange "IP range" ← first:IP '-' last:IP {
+  r := ipRange{first: first.(netip.Addr), last: last.(netip.Addr)}
+  if r.first.Is4() != r.last.Is4() {
+    return ipRange{}, errors.New("expecting both ends of an IP range to use the same IP version")
+  }
+  if r.last.Less(r.first) {
+    return ipRange{}, errors.New("expecting an IP range from the lowest to the highest address")
+  }
+  return r, nil
+}
 
-ListIPOrSubnet "list of IP addresses or subnets" ←
-   head:(Subnet / IP) _ ',' _ tail:ListIPOrSubnet {
+ListIPOrSubnet "list of IP addresses, ranges or subnets" ←
+   head:(IPRange / Subnet / IP) _ ',' _ tail:ListIPOrSubnet {
      return append([]any{head}, toSlice(tail)...), nil
    }
- / value:(Subnet / IP) { return []any{value}, nil }
+ / value:(IPRange / Subnet / IP) { return []any{value}, nil }
 
 Prefix "IP prefix" ← [0-9A-Fa-f:.]+ "/" [0-9]+ !IdentStart {
   net, err := netip.ParsePrefix(string(c.text))
