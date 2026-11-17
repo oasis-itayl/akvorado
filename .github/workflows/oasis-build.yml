@@ -1,0 +1,36 @@
+name: Oasis - build image
+
+on:
+  push:
+    branches: [oasis/build]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        run: echo "node=$(cat console/frontend/.nvmrc)" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/amd64
+          build-args: |
+            NODE_VERSION=${{ steps.v.outputs.node }}
+            VERSION=2026.10.1-iprange
+          push: true
+          tags: |
+            ghcr.io/oasis-itayl/akvorado:2026.10.1-iprange
+            ghcr.io/oasis-itayl/akvorado:sha-${{ github.sha }}
