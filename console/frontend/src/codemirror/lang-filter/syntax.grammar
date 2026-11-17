@@ -19,14 +19,11 @@ comparisonExpression {
 }
 
 Value {
-  String | Literal | ipRange | ValueLParen ListOfValues ValueRParen
+  String | Literal | ValueLParen ListOfValues ValueRParen
 }
 ListOfValues {
-  ListOfValues ValueComma (String | Literal | ipRange) |
-  String | Literal | ipRange
-}
-ipRange {
-  Literal RangeDash Literal
+  ListOfValues ValueComma (String | Literal) |
+  String | Literal
 }
 
 @skip { whitespace | LineComment | BlockComment }
@@ -48,16 +45,18 @@ ipRange {
     '"' (![\\\n"] | "\\" _)* '"'? |
     "'" (![\\\n'] | "\\" _)* "'"?
   }
-  Literal { (std.digit | std.asciiLetter | $[.:/-])+ }
+  literalChar { std.digit | std.asciiLetter | $[.:/-] }
+  literalStart { std.digit | std.asciiLetter | $[.:/] }
+  // An IP range with spaces around the dash is lexed as a single literal
+  Literal { literalChar+ (std.whitespace* "-" std.whitespace* literalStart literalChar*)? }
   ValueLParen { "(" }
   ValueRParen { ")" }
   ValueComma { "," }
-  RangeDash { "-" }
 
   Or { "or" | "OR" | "Or" | "oR" }
   And { "and" | "AND" | "And" | "ANd" | "AnD" | "aND" | "aNd" | "anD" }
   Not { "not" | "NOT" | "Not" | "NOt" | "NoT" | "nOT" | "nOt" | "noT" }
 
   @precedence { Not, Column }
-  @precedence { LineComment, RangeDash, Literal, BlockComment }
+  @precedence { LineComment, Literal, BlockComment }
 }
