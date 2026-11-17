@@ -45,7 +45,10 @@ ListOfValues {
     '"' (![\\\n"] | "\\" _)* '"'? |
     "'" (![\\\n'] | "\\" _)* "'"?
   }
-  Literal { (std.digit | std.asciiLetter | $[.:/-])+ }
+  literalChar { std.digit | std.asciiLetter | $[.:/-] }
+  literalStart { std.digit | std.asciiLetter | $[.:/] }
+  // An IP range with spaces around the dash is lexed as a single literal
+  Literal { literalChar+ (std.whitespace* "-" std.whitespace* literalStart literalChar*)? }
   ValueLParen { "(" }
   ValueRParen { ")" }
   ValueComma { "," }

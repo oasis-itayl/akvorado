@@ -303,7 +303,7 @@ Subnet "IP subnet" ← [0-9A-Fa-f:.]+ "/" [0-9]+ !IdentStart {
   }
   return net, nil
 }
-IPRange "IP range" ← first:IP '-' last:IP {
+IPRange "IP range" ← first:IP _ '-' _ last:IP {
   r := ipRange{first: first.(netip.Addr), last: last.(netip.Addr)}
   if r.first.Is4() != r.last.Is4() {
     return ipRange{}, errors.New("expecting both ends of an IP range to use the same IP version")

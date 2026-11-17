@@ -84,6 +84,24 @@ SrcAddr=192.0.2.10-192.0.2.20 -- some comment
 ==>
 Filter(Column, Operator, Value(Literal), LineComment)
 
+# Line comment after an address and a space
+SrcAddr = 192.0.2.10 -- some comment
+==>
+Filter(Column, Operator, Value(Literal), LineComment)
+
+# IPv4 range with spaces
+SrcAddr = 192.0.2.10 - 192.0.2.20
+==>
+Filter(Column, Operator, Value(Literal))
+
+# IPv4 range with spaces in a list
+SrcAddr IN (192.0.2.1, 192.0.2.10 - 192.0.2.20)
+==>
+Filter(Column, Operator, Value(
+  ValueLParen,
+    ListOfValues(ListOfValues(Literal), ValueComma, Literal),
+  ValueRParen))
+
 # << Operator
 ExporterAddress << 2001:db8:0::/64
 ==>
