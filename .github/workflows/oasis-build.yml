@@ -29,8 +29,8 @@ jobs:
           platforms: linux/amd64
           build-args: |
             NODE_VERSION=${{ steps.v.outputs.node }}
-            VERSION=2026.10.1-iprange
+            VERSION=2026.10.1-iprange.m1
           push: true
           tags: |
-            ghcr.io/oasis-itayl/akvorado:2026.10.1-iprange
+            ghcr.io/oasis-itayl/akvorado:2026.10.1-iprange.m1
             ghcr.io/oasis-itayl/akvorado:sha-${{ github.sha }}
